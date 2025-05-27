@@ -1,7 +1,7 @@
 import csv
 import datetime
 
-archivo_entrada = "asistencia2.csv"
+archivo_entrada = "asistencia.csv"
 archivo_salida = "reporte_diario.csv"
 archivo_intervalo = "intervalo.csv"
 horarios = {
@@ -150,16 +150,83 @@ def generar_reporte_asistencia(obj_asistencia, dias_trabajables):
     return reporte
 
 
+# Función - calcular resumen estadístico de asistencia
+def resumen_estadistico_asistencia(reporte_final, horarios):
+    resumen = {}
+
+    for nombre, dias in reporte_final.items():
+        asistencias = 0
+        tardanzas = 0
+        horas_extra = 0
+        horas_perdidas = 0
+
+        # Horario de referencia (por defecto 08:00 - 17:00 si no se encuentra)
+        hora_entrada_ref_str, hora_salida_ref_str = horarios.get(
+            nombre, ("08:00", "17:00")
+        )
+        hora_entrada_ref = datetime.datetime.strptime(hora_entrada_ref_str, "%H:%M").time()
+        hora_salida_ref = datetime.datetime.strptime(hora_salida_ref_str, "%H:%M").time()
+
+        # Duración de la jornada laboral en minutos
+        jornada_estimada = (
+            datetime.datetime.combine(datetime.datetime.min, hora_salida_ref)
+            - datetime.datetime.combine(datetime.datetime.min, hora_entrada_ref)
+        ).seconds // 60
+
+        for dia in dias:
+            hora_entrada = dia["Hora Entrada"]
+            hora_salida = dia["Hora Salida"]
+            tiempo_total = dia["Tiempo Total"]
+
+            if hora_entrada and hora_salida:
+                asistencias += 1
+
+                entrada_dt = datetime.datetime.strptime(hora_entrada, "%H:%M").time()
+                salida_dt = datetime.datetime.strptime(hora_salida, "%H:%M").time()
+
+                # Tardanza si llegó después de la hora de entrada
+                if entrada_dt > hora_entrada_ref:
+                    tardanzas += 1
+
+                # Calcular duración trabajada en minutos
+                entrada_completa = datetime.datetime.combine(datetime.date.min, entrada_dt)
+                salida_completa = datetime.datetime.combine(datetime.date.min, salida_dt)
+
+                minutos_trabajados = (salida_completa - entrada_completa).seconds // 60
+
+                diferencia = minutos_trabajados - jornada_estimada
+                if diferencia > 0:
+                    horas_extra += diferencia
+                elif diferencia < 0:
+                    horas_perdidas += abs(diferencia)
+
+        resumen[nombre] = [
+            nombre,
+            asistencias,
+            tardanzas,
+            f"{horas_extra // 60}h {horas_extra % 60}m",
+            f"{horas_perdidas // 60}h {horas_perdidas % 60}m",
+        ]
+
+    return resumen
+
+
+# Funcion - mostrar reporte formateado
+def mostrar_reporte_formateado(reporte):
+    for trabajador, dias in reporte.items():
+        print(f"\n🧑 {trabajador}")
+        for dia in dias:
+            print(
+                f"📅 {dia['Fecha']}: Entrada: {dia['Hora Entrada']} - Salida: {dia['Hora Salida']} - "
+                f"Total: {dia['Tiempo Total']} - Obs: {dia['Observaciones']}"
+            )
+
 # Main
 trabajadores = obtener_trabajadores()
 obj_trabajadores = crear_obj_trabajadores(trabajadores)
 objt_trabajadores_asistencia = agregar_registros_a_obj(obj_trabajadores)
 dias_laborables = dias_trabajables_desde_intervalo_csv()
-reporte_final = generar_reporte_asistencia(objt_trabajadores_asistencia, dias_laborables)
-print(reporte_final)
-# Mostrar reporte formateado
-for trabajador, dias in reporte_final.items():
-    print(f"\n🧑 {trabajador}")
-    for dia in dias:
-        print(f"📅 {dia['Fecha']}: Entrada: {dia['Hora Entrada']} - Salida: {dia['Hora Salida']} - "
-              f"Total: {dia['Tiempo Total']} - Obs: {dia['Observaciones']}")
+reporte_final = generar_reporte_asistencia(
+    objt_trabajadores_asistencia, dias_laborables
+)
+print(mostrar_reporte_formateado(reporte_final))
