@@ -18,7 +18,6 @@ horarios = {
 
 # Funcion - excluir nombres
 def obtener_trabajadores_con_exclusion():
-
     lista_trabajadores = obtener_trabajadores()
     nombres_excluidos = {"Frank 8", "Miguel 9"}
 
