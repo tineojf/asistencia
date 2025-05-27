@@ -1,87 +1,143 @@
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
+from collections import defaultdict
 
 # Archivos
 archivo_entrada = "asistencia.csv"
-archivo_salida = "reporte_diario.csv"
+archivo_salida_detalle = "reporte_diario.csv"
+archivo_resumen = "resumen_trabajadores.csv"
 
 # Leer datos del CSV
 registros = []
 with open(archivo_entrada, newline="", encoding="utf-8") as csvfile:
     lector = csv.DictReader(csvfile)
     for fila in lector:
-        # Convertir string de fecha y hora
         dt = datetime.strptime(fila["Tiempo"], "%d/%m/%Y %H:%M:%S")
+
+        # Limpieza del nombre: tomar solo la primera palabra y capitalizarla
+        nombre_limpio = fila["Nombre"].split()[0].capitalize()
+
         registros.append(
             {
-                "fecha": dt.strftime("%d/%m/%Y"),
-                "nombre": fila["Nombre"],
-                "hora": dt.strftime("%H:%M:%S"),
+                "fecha": dt.date(),
+                "nombre": nombre_limpio,
+                "hora": dt.time(),
                 "estado": fila["Estado"],
-                "orden": dt,  # Para ordenar correctamente
+                "orden": dt,
             }
         )
 
-# Ordenar por fecha y hora
+
+# Ordenar registros por fecha y hora
 registros.sort(key=lambda x: x["orden"])
 
-# Escribir reporte
-with open(archivo_salida, "w", newline="", encoding="utf-8") as csvfile:
+# Guardar reporte diario detallado
+with open(archivo_salida_detalle, "w", newline="", encoding="utf-8") as csvfile:
     campos = ["Fecha", "Nombre", "Hora", "Estado"]
     escritor = csv.DictWriter(csvfile, fieldnames=campos)
     escritor.writeheader()
     for r in registros:
         escritor.writerow(
             {
-                "Fecha": r["fecha"],
+                "Fecha": r["fecha"].strftime("%d/%m/%Y"),
                 "Nombre": r["nombre"],
-                "Hora": r["hora"],
+                "Hora": r["hora"].strftime("%H:%M:%S"),
                 "Estado": r["estado"],
             }
         )
 
-print(f"✅ Reporte generado correctamente: {archivo_salida}")
+print(f"✅ Reporte diario generado: {archivo_salida_detalle}")
 
+# --------- ANALISIS DE ASISTENCIA ---------
 
-# lista de trabajadores
-# intervalo de fechas
-# cantidad de dias laborables
-# lista de horarios
-# lista de fecha, hora, estado
-# funcion para sumar asistencia, tardanza, dias, horas extra, horas perdidas
-
-trabajadores = (
-    "Elizabeth 1",
-    "Principe 2",
-    "Orlando 3",
-    "Chino 4",
-    "Mendez 6",
-    "Vallejo 7",
-    "Frank 8",
-    "Miguel 9",
-    "Juan 10",
-    "Teofilo 11",
-)
-
-horarios = {
-    "dia": {
-        "hora_entrada": "08:00",
-        "hora_salida": "18:00",
-    },
-    "noche": {
-        "hora_entrada": "18:00",
-        "hora_salida": "06:00",
-    },
-    "oficina": {
-        "hora_entrada": "08:00",
-        "hora_salida": "17:00",
-    },
+# Definir horarios de los trabajadores
+horarios_trabajadores = {
+    "Chino": ("07:00", "19:00"),
+    "Javier": ("07:00", "19:00"),
+    "Teofilo": ("07:00", "19:00"),
+    "Juan": ("07:00", "19:00"),
+    "Cesar": ("07:00", "19:00"),
+    "Ronal": ("07:00", "19:00"),
+    "Elizabeth": ("08:00", "17:00"),
+    "Orlando": ("08:00", "17:00"),
+    "Mendez": ("08:00", "17:00"),
+    "Principe": ("08:00", "17:00"),
+    "Vallejo": ("08:00", "17:00"),
+    "Frank": ("08:00", "17:00"),
+    "Miguel": ("08:00", "17:00"),
 }
 
 
-def obtener_mes_actual_formato():
-    fecha_actual = datetime.now()
-    return fecha_actual.strftime("%m")
+# Tolerancia de 15 minutos
+tolerancia = timedelta(minutes=15)
 
+# Construir diccionario de asistencias por trabajador y día
+asistencias = defaultdict(lambda: defaultdict(list))
+for r in registros:
+    asistencias[r["nombre"]][r["fecha"]].append(r["hora"])
 
-dias_laborables = {}
+# Determinar rango de fechas (solo días laborables)
+fechas_registradas = [r["fecha"] for r in registros]
+fecha_inicio = min(fechas_registradas)
+fecha_fin = max(fechas_registradas)
+dias_laborables = [
+    fecha_inicio + timedelta(days=i)
+    for i in range((fecha_fin - fecha_inicio).days + 1)
+    if (fecha_inicio + timedelta(days=i)).weekday() < 5
+]
+
+# Calcular resumen
+resumen = defaultdict(
+    lambda: {"asistencias": 0, "tardanzas": 0, "horas_extra": 0, "horas_perdidas": 0}
+)
+
+for trabajador, (h_entrada_str, h_salida_str) in horarios_trabajadores.items():
+    hora_entrada = datetime.strptime(h_entrada_str, "%H:%M").time()
+    hora_salida = datetime.strptime(h_salida_str, "%H:%M").time()
+
+    for dia in dias_laborables:
+        entradas = asistencias[trabajador].get(dia, [])
+        if not entradas:
+            resumen[trabajador]["horas_perdidas"] += 1
+        else:
+            hora_min = min(entradas)
+            hora_max = max(entradas)
+
+            # Construir datetime con fecha y hora para comparar con tolerancia
+            dt_entrada_programada = datetime.combine(dia, hora_entrada) + tolerancia
+            dt_salida_programada = datetime.combine(dia, hora_salida) + tolerancia
+            dt_entrada_real = datetime.combine(dia, hora_min)
+            dt_salida_real = datetime.combine(dia, hora_max)
+
+            # Verificar asistencia o tardanza con tolerancia
+            if dt_entrada_real <= dt_entrada_programada:
+                resumen[trabajador]["asistencias"] += 1
+            else:
+                resumen[trabajador]["tardanzas"] += 1
+
+            # Verificar horas extra con tolerancia
+            if dt_salida_real > dt_salida_programada:
+                resumen[trabajador]["horas_extra"] += 1
+
+# Mostrar resumen en consola
+print("\n📊 Resumen final por trabajador:")
+for nombre, datos in resumen.items():
+    print(f"{nombre}: {datos}")
+
+# Guardar resumen en CSV
+with open(archivo_resumen, "w", newline="", encoding="utf-8") as csvfile:
+    campos = ["Nombre", "Asistencias", "Tardanzas", "Horas Extra", "Horas Perdidas"]
+    escritor = csv.DictWriter(csvfile, fieldnames=campos)
+    escritor.writeheader()
+    for nombre, datos in resumen.items():
+        escritor.writerow(
+            {
+                "Nombre": nombre,
+                "Asistencias": datos["asistencias"],
+                "Tardanzas": datos["tardanzas"],
+                "Horas Extra": datos["horas_extra"],
+                "Horas Perdidas": datos["horas_perdidas"],
+            }
+        )
+
+print(f"✅ Resumen de trabajadores generado: {archivo_resumen}")
