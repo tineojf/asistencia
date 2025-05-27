@@ -5,6 +5,35 @@ import calendar
 archivo_entrada = "asistencia.csv"
 archivo_salida = "reporte_diario.csv"
 
+
+# Funcion - excluir nombres
+def obtener_trabajadores_con_exclusion():
+
+    lista_trabajadores = obtener_trabajadores()
+    nombres_excluidos = {"Frank 8", "Miguel 9"}
+
+    trabajadores_filtrados = [
+        nombre for nombre in lista_trabajadores if nombre not in nombres_excluidos
+    ]
+    return tuple(trabajadores_filtrados)
+
+
+# Funcion - retorna una tupla con los trabajadores
+def obtener_trabajadores():
+    set_trabajadores = set()
+
+    with open(archivo_entrada, newline="", encoding="utf-8") as archivo:
+        lector = csv.DictReader(archivo)
+        for fila in lector:
+            set_trabajadores.add(fila["Nombre"])
+
+    return tuple(set_trabajadores)
+
+
+for i in obtener_trabajadores_con_exclusion():
+    print(i)
+
+
 # lista de fecha, hora, estado
 # funcion para sumar asistencia, tardanza, dias, horas extra, horas perdidas
 
@@ -139,4 +168,3 @@ def cargar_registros_por_trabajador(archivo_csv, trabajadores):
                     break
 
     return obj_trabajadores
-
