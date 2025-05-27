@@ -41,7 +41,7 @@ def obtener_trabajadores():
 
 # Funcion - retorna objeto con los trabajadores y sus registros
 def crear_obj_trabajadores(tupla):
-    return {item: {} for item in tupla}
+    return {item: [] for item in tupla}
 
 
 # Funcion - retorna lista con dias trabajados
@@ -65,30 +65,34 @@ def dias_trabajables_desde_intervalo_csv():
     return dias_laborables
 
 
+# Funcion - cargar registros por trabajador
+def agregar_registros_a_obj(obj):
+    with open(archivo_entrada, newline="", encoding="utf-8") as archivo:
+        lector = csv.DictReader(archivo)
+        for fila in lector:
+            nombre = fila["Nombre"]
+            if nombre in obj:
+                registro_filtrado = {
+                    "Tiempo": fila["Tiempo"],
+                    "Estado": fila["Estado"],
+                }
+                obj[nombre].append(registro_filtrado)
+    return obj
+
+
 # Main
-trabajadores = obtener_trabajadores_con_exclusion()
+# trabajadores = obtener_trabajadores_con_exclusion()
+trabajadores = obtener_trabajadores()
 obj_trabajadores = crear_obj_trabajadores(trabajadores)
-# print(obj_trabajadores)
-# print(dias_trabajables_desde_intervalo_csv())
+objt_trabajadores_asistencia = agregar_registros_a_obj(obj_trabajadores)
+# print(objt_trabajadores_asistencia)
 
-
-# def cargar_registros_por_trabajador(archivo_csv, trabajadores):
-# obj_trabajadores = {trabajador: [] for trabajador in trabajadores}
-#
-# with open(archivo_csv, newline="", encoding="utf-8") as archivo:
-# lector = csv.DictReader(archivo)
-#
-# for fila in lector:
-# nombre_fila = fila["Nombre"].strip()
-#
-# for trabajador in trabajadores:
-# if nombre_fila == trabajador:
-# registro = {
-# "Tiempo": fila["Tiempo"],
-# "Estado": fila["Estado"],
-# }
-# obj_trabajadores[trabajador].append(registro)
-# break
-#
-# return obj_trabajadores
-#
+for trabajador, registros in objt_trabajadores_asistencia.items():
+    print(f"\n🧑 Trabajador: {trabajador}")
+    if not registros:
+        print("  (Sin registros)")
+    else:
+        for fila in registros:
+            tiempo = fila["Tiempo"]
+            estado = fila["Estado"]
+            print(f"  • {tiempo} | {estado}")
