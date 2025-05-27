@@ -4,6 +4,16 @@ import calendar
 
 archivo_entrada = "asistencia.csv"
 archivo_salida = "reporte_diario.csv"
+horarios = {
+    "Elizabeth 1": ("08:00", "17:00"),
+    "Orlando 3": ("08:00", "1:00"),
+    "Principe 2": ("07:00", "19:00"),  # No confirmado
+    "Juan 10": ("07:00", "19:00"),  # No confirmado
+    "Chino 4": ("07:00", "19:00"),  # No confirmado
+    "Vallejo 7": ("07:00", "19:00"),  # No confirmado
+    "Mendez 6": ("07:00", "19:00"),  # No confirmado
+    "Teofilo 11": ("07:00", "19:00"),  # No confirmado
+}
 
 
 # Funcion - excluir nombres
@@ -30,56 +40,15 @@ def obtener_trabajadores():
     return tuple(set_trabajadores)
 
 
-for i in obtener_trabajadores_con_exclusion():
-    print(i)
+# Funcion - retorna objeto con los trabajadores y sus registros
+def crear_obj_trabajadores(tupla):
+    return {item: {} for item in tupla}
 
 
-# lista de fecha, hora, estado
-# funcion para sumar asistencia, tardanza, dias, horas extra, horas perdidas
-
-# modificar que saque los usuarios de un archivo csv - filtrando la columna
-trabajadores = (
-    "Elizabeth 1",
-    "Principe 2",
-    "Orlando 3",
-    "Chino 4",
-    "Wilmer 5",
-    "Mendez 6",
-    "Vallejo 7",
-    "Frank 8",
-    "Miguel 9",
-    "Juan 10",
-    "Teofilo 11",
-)
-
-obj_trabajadores = {
-    trabajadores[0]: {},
-    trabajadores[1]: {},
-    trabajadores[2]: {},
-    trabajadores[3]: {},
-    trabajadores[4]: {},
-    trabajadores[5]: {},
-    trabajadores[6]: {},
-    trabajadores[7]: {},
-    trabajadores[8]: {},
-    trabajadores[9]: {},
-    trabajadores[10]: {},
-}
-
-horarios = {
-    "dia": {
-        "hora_entrada": "08:00",
-        "hora_salida": "18:00",
-    },
-    "noche": {
-        "hora_entrada": "18:00",
-        "hora_salida": "06:00",
-    },
-    "oficina": {
-        "hora_entrada": "08:00",
-        "hora_salida": "17:00",
-    },
-}
+# Main
+trabajadores = obtener_trabajadores_con_exclusion()
+obj_trabajadores = crear_obj_trabajadores(trabajadores)
+print(obj_trabajadores)
 
 
 def obtener_mes_actual():
