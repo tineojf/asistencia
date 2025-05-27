@@ -79,20 +79,21 @@ def agregar_registros_a_obj(obj):
                 obj[nombre].append(registro_filtrado)
     return obj
 
+# Funcion - mostrar registros por trabajador
+def mostrar_registros_por_trabajador(obj):
+    for trabajador, registros in obj.items():
+        print(f"\n🧑 Trabajador: {trabajador}")
+        if not registros:
+            print("  (Sin registros)")
+        else:
+            for fila in registros:
+                tiempo = fila["Tiempo"]
+                estado = fila["Estado"]
+                print(f"  • {tiempo} | {estado}")
 
 # Main
 # trabajadores = obtener_trabajadores_con_exclusion()
 trabajadores = obtener_trabajadores()
 obj_trabajadores = crear_obj_trabajadores(trabajadores)
 objt_trabajadores_asistencia = agregar_registros_a_obj(obj_trabajadores)
-# print(objt_trabajadores_asistencia)
-
-for trabajador, registros in objt_trabajadores_asistencia.items():
-    print(f"\n🧑 Trabajador: {trabajador}")
-    if not registros:
-        print("  (Sin registros)")
-    else:
-        for fila in registros:
-            tiempo = fila["Tiempo"]
-            estado = fila["Estado"]
-            print(f"  • {tiempo} | {estado}")
+# mostrar_registros_por_trabajador(objt_trabajadores_asistencia)
