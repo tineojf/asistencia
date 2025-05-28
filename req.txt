@@ -1,3 +1,0 @@
-Nombre - Asistencias - Tardanzas - Horas Extra - Horas Perdidas
-
-Nombre - Fecha - Hora entrada - Hora salida - Tiempo total - Observaciones

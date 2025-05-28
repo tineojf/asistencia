@@ -337,11 +337,6 @@ reporte_final = generar_reporte_asistencia(
 estadisticas_final = generar_reporte_estadisticas(reporte_final)
 
 
-# print(reporte_final)
-# print(mostrar_asistencia_formateado(reporte_final))
-# print(estadisticas_final)
-# mostrar_estadisticas_formateadas(estadisticas_final)
-
 print("\nGenerando reporte diario...")
 generar_excel_reporte_diario(reporte_final, estadisticas_final)
 print(f"Reporte diario generado: {archivo_reporte_diario}")
