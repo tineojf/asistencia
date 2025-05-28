@@ -2,12 +2,28 @@ import csv
 import datetime
 import pandas as pd
 from openpyxl.utils import get_column_letter
+import os
+import sys
 
 
-archivo_entrada = "asistencia.csv"
-archivo_reporte_diario = "reporte_diario.xlsx"
-archivo_reporte_estadistico = "reporte_estadistico.csv"
-archivo_intervalo = "intervalo.csv"
+def ruta_absoluta_archivo(nombre_archivo):
+    if getattr(sys, "frozen", False):
+        # Si está compilado con PyInstaller
+        ruta_base = (
+            sys._MEIPASS
+            if hasattr(sys, "_MEIPASS")
+            else os.path.dirname(sys.executable)
+        )
+    else:
+        # Ejecutando como script Python
+        ruta_base = os.path.dirname(__file__)
+    return os.path.join(ruta_base, nombre_archivo)
+
+
+archivo_entrada = ruta_absoluta_archivo("asistencia.csv")
+archivo_reporte_diario = ruta_absoluta_archivo("reporte_diario.xlsx")
+archivo_reporte_estadistico = ruta_absoluta_archivo("reporte_estadistico.csv")
+archivo_intervalo = ruta_absoluta_archivo("intervalo.csv")
 horarios = {
     "Elizabeth 1": ("08:15", "17:00"),
     "Orlando 3": ("08:15", "17:00"),
@@ -326,17 +342,21 @@ def generar_excel_reporte_diario(reporte_final, estadisticas_final):
                 worksheet.column_dimensions[column_letter].width = adjusted_width
 
 
-# Main
-trabajadores = obtener_trabajadores_con_exclusion()
-dias_laborables = dias_trabajables_desde_intervalo_csv()
-obj_trabajadores = crear_obj_trabajadores(trabajadores)
-objt_trabajadores_asistencia = agregar_registros_a_obj(obj_trabajadores)
-reporte_final = generar_reporte_asistencia(
-    objt_trabajadores_asistencia, dias_laborables
-)
-estadisticas_final = generar_reporte_estadisticas(reporte_final)
+# Funcion - main
+def main():
+    trabajadores = obtener_trabajadores_con_exclusion()
+    dias_laborables = dias_trabajables_desde_intervalo_csv()
+    obj_trabajadores = crear_obj_trabajadores(trabajadores)
+    objt_trabajadores_asistencia = agregar_registros_a_obj(obj_trabajadores)
+    reporte_final = generar_reporte_asistencia(
+        objt_trabajadores_asistencia, dias_laborables
+    )
+    estadisticas_final = generar_reporte_estadisticas(reporte_final)
+
+    print("\nGenerando reporte diario...")
+    generar_excel_reporte_diario(reporte_final, estadisticas_final)
+    print(f"Reporte diario generado: {archivo_reporte_diario}")
 
 
-print("\nGenerando reporte diario...")
-generar_excel_reporte_diario(reporte_final, estadisticas_final)
-print(f"Reporte diario generado: {archivo_reporte_diario}")
+if __name__ == "__main__":
+    main()
