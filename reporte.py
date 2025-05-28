@@ -1,8 +1,12 @@
 import csv
 import datetime
+import pandas as pd
+from openpyxl.utils import get_column_letter
+
 
 archivo_entrada = "asistencia.csv"
-archivo_salida = "reporte_diario.csv"
+archivo_reporte_diario = "reporte_diario.xlsx"
+archivo_reporte_estadistico = "reporte_estadistico.csv"
 archivo_intervalo = "intervalo.csv"
 horarios = {
     "Elizabeth 1": ("08:00", "17:00"),
@@ -164,8 +168,12 @@ def resumen_estadistico_asistencia(reporte_final, horarios):
         hora_entrada_ref_str, hora_salida_ref_str = horarios.get(
             nombre, ("08:00", "17:00")
         )
-        hora_entrada_ref = datetime.datetime.strptime(hora_entrada_ref_str, "%H:%M").time()
-        hora_salida_ref = datetime.datetime.strptime(hora_salida_ref_str, "%H:%M").time()
+        hora_entrada_ref = datetime.datetime.strptime(
+            hora_entrada_ref_str, "%H:%M"
+        ).time()
+        hora_salida_ref = datetime.datetime.strptime(
+            hora_salida_ref_str, "%H:%M"
+        ).time()
 
         # Duración de la jornada laboral en minutos
         jornada_estimada = (
@@ -189,8 +197,12 @@ def resumen_estadistico_asistencia(reporte_final, horarios):
                     tardanzas += 1
 
                 # Calcular duración trabajada en minutos
-                entrada_completa = datetime.datetime.combine(datetime.date.min, entrada_dt)
-                salida_completa = datetime.datetime.combine(datetime.date.min, salida_dt)
+                entrada_completa = datetime.datetime.combine(
+                    datetime.date.min, entrada_dt
+                )
+                salida_completa = datetime.datetime.combine(
+                    datetime.date.min, salida_dt
+                )
 
                 minutos_trabajados = (salida_completa - entrada_completa).seconds // 60
 
@@ -221,12 +233,38 @@ def mostrar_reporte_formateado(reporte):
                 f"Total: {dia['Tiempo Total']} - Obs: {dia['Observaciones']}"
             )
 
+
+# Funcion - genera excel con reporte
+def generar_excel_reporte_diario(reporte_final):
+    with pd.ExcelWriter(archivo_reporte_diario, engine="openpyxl") as writer:
+        for trabajador, registros in reporte_final.items():
+            df = pd.DataFrame(registros).fillna("-")
+            df.to_excel(writer, sheet_name=trabajador[:31], index=False)
+
+        for sheet_name in writer.book.sheetnames:
+            worksheet = writer.book[sheet_name]
+            for col_idx, col in enumerate(
+                worksheet.iter_cols(1, worksheet.max_column), 1
+            ):
+                max_length = max(
+                    (len(str(cell.value)) for cell in col if cell.value is not None),
+                    default=0,
+                )
+                adjusted_width = max_length + 2  # ancho con padding
+                column_letter = get_column_letter(col_idx)
+                worksheet.column_dimensions[column_letter].width = adjusted_width
+
+
 # Main
-trabajadores = obtener_trabajadores()
+trabajadores = obtener_trabajadores_con_exclusion()
 obj_trabajadores = crear_obj_trabajadores(trabajadores)
 objt_trabajadores_asistencia = agregar_registros_a_obj(obj_trabajadores)
 dias_laborables = dias_trabajables_desde_intervalo_csv()
 reporte_final = generar_reporte_asistencia(
     objt_trabajadores_asistencia, dias_laborables
 )
+# print(reporte_final)
 print(mostrar_reporte_formateado(reporte_final))
+
+print("\nGenerando reporte diario...")
+generar_excel_reporte_diario(reporte_final)
