@@ -20,18 +20,7 @@ horarios = {
 }
 
 
-# Funcion - excluir nombres
-def obtener_trabajadores_con_exclusion():
-    lista_trabajadores = obtener_trabajadores()
-    nombres_excluidos = {"Frank 8", "Miguel 9"}
-
-    trabajadores_filtrados = [
-        nombre for nombre in lista_trabajadores if nombre not in nombres_excluidos
-    ]
-    return tuple(trabajadores_filtrados)
-
-
-# Funcion - retorna una tupla con los trabajadores
+# Funcion - retorna tuple - con trabajadores extraidos del csv
 def obtener_trabajadores():
     set_trabajadores = set()
 
@@ -43,12 +32,23 @@ def obtener_trabajadores():
     return tuple(set_trabajadores)
 
 
-# Funcion - retorna objeto con los trabajadores y sus registros
+# Funcion - retorna tuple - con trabajadores excluyendo algunos
+def obtener_trabajadores_con_exclusion():
+    lista_trabajadores = obtener_trabajadores()
+    nombres_excluidos = {"Frank 8", "Miguel 9"}
+
+    trabajadores_filtrados = [
+        nombre for nombre in lista_trabajadores if nombre not in nombres_excluidos
+    ]
+    return tuple(trabajadores_filtrados)
+
+
+# Funcion - retorna objeto - con trabajadores como claves y listas vacías como valores
 def crear_obj_trabajadores(tupla):
     return {item: [] for item in tupla}
 
 
-# Funcion - retorna lista con dias trabajados
+# Funcion - retorna lista - con días laborables desde el intervalo definido en el CSV
 def dias_trabajables_desde_intervalo_csv():
     with open(archivo_intervalo, mode="r", encoding="utf-8") as archivo:
         lector = csv.reader(archivo)
@@ -69,7 +69,7 @@ def dias_trabajables_desde_intervalo_csv():
     return dias_laborables
 
 
-# Funcion - cargar registros por trabajador
+# Funcion - retorna objeto - con registros de asistencia por trabajador
 def agregar_registros_a_obj(obj):
     with open(archivo_entrada, newline="", encoding="utf-8") as archivo:
         lector = csv.DictReader(archivo)
@@ -84,20 +84,7 @@ def agregar_registros_a_obj(obj):
     return obj
 
 
-# Funcion - mostrar registros por trabajador
-def mostrar_registros_por_trabajador(obj):
-    for trabajador, registros in obj.items():
-        print(f"\n🧑 Trabajador: {trabajador}")
-        if not registros:
-            print("  (Sin registros)")
-        else:
-            for fila in registros:
-                tiempo = fila["Tiempo"]
-                estado = fila["Estado"]
-                print(f"  • {tiempo} | {estado}")
-
-
-# Funcion - mostrar reporte
+# Funcion - retorna objeto - con reporte de asistencia por trabajador y día
 def generar_reporte_asistencia(obj_asistencia, dias_trabajables):
     reporte = {}
 
@@ -183,8 +170,8 @@ def generar_reporte_asistencia(obj_asistencia, dias_trabajables):
     return reporte
 
 
-# Función - calcular resumen estadístico de asistencia
-def resumen_estadistico_asistencia(reporte_final, horarios):
+# Función - retorna objeto - con resumen estadístico
+def generar_estadistico_asistencia(reporte_final, horarios):
     resumen = {}
 
     for nombre, dias in reporte_final.items():
@@ -252,7 +239,20 @@ def resumen_estadistico_asistencia(reporte_final, horarios):
     return resumen
 
 
-# Funcion - mostrar reporte formateado
+# Funcion - imprime - los registros de agregar_registros_a_obj()
+def mostrar_registros_por_trabajador(obj):
+    for trabajador, registros in obj.items():
+        print(f"\n🧑 Trabajador: {trabajador}")
+        if not registros:
+            print("  (Sin registros)")
+        else:
+            for fila in registros:
+                tiempo = fila["Tiempo"]
+                estado = fila["Estado"]
+                print(f"  • {tiempo} | {estado}")
+
+
+# Funcion - imprime - el reporte de generar_reporte_asistencia()
 def mostrar_reporte_formateado(reporte):
     for trabajador, dias in reporte.items():
         print(f"\n🧑 {trabajador}")
@@ -268,7 +268,7 @@ def mostrar_reporte_formateado(reporte):
             )
 
 
-# Funcion - genera excel con reporte
+# Funcion - genera excel - reporte diario
 def generar_excel_reporte_diario(reporte_final):
     with pd.ExcelWriter(archivo_reporte_diario, engine="openpyxl") as writer:
         for trabajador, registros in reporte_final.items():
@@ -288,11 +288,13 @@ def generar_excel_reporte_diario(reporte_final):
                 column_letter = get_column_letter(col_idx)
                 worksheet.column_dimensions[column_letter].width = adjusted_width
 
+# Funcion - genera excel - reporte estadístico
 
 # Main
 trabajadores = obtener_trabajadores_con_exclusion()
 obj_trabajadores = crear_obj_trabajadores(trabajadores)
 objt_trabajadores_asistencia = agregar_registros_a_obj(obj_trabajadores)
+mostrar_registros_por_trabajador(objt_trabajadores_asistencia)
 dias_laborables = dias_trabajables_desde_intervalo_csv()
 reporte_final = generar_reporte_asistencia(
     objt_trabajadores_asistencia, dias_laborables
@@ -300,5 +302,5 @@ reporte_final = generar_reporte_asistencia(
 # print(reporte_final)
 # print(mostrar_reporte_formateado(reporte_final))
 
-print("\nGenerando reporte diario...")
-generar_excel_reporte_diario(reporte_final)
+# print("\nGenerando reporte diario...")
+# generar_excel_reporte_diario(reporte_final)
