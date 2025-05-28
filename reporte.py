@@ -206,14 +206,6 @@ def generar_reporte_estadisticas(reporte):
         horas, minutos = divmod(segundos_abs // 60, 60)
         diferencia_formateada = f"{signo}{horas}h {minutos}m"
 
-        # Determinar acción
-        if segundos > 0:
-            accion = "Pago"
-        elif segundos < 0:
-            accion = "Descuento"
-        else:
-            accion = "Sin acción"
-
         def formatear(td):
             total_seg = int(td.total_seconds())
             h, m = divmod(total_seg // 60, 60)
@@ -227,7 +219,6 @@ def generar_reporte_estadisticas(reporte):
                 formatear(total_horas_extra),
                 formatear(total_horas_perdidas),
                 diferencia_formateada,
-                accion,
             ]
         )
 
@@ -272,7 +263,6 @@ def mostrar_estadisticas_formateadas(estadisticas):
         "🕒 Horas Extra",
         "⌛ Horas Perdidas",
         "📊 Diferencia",
-        "💰 Acción",
     ]
 
     col_widths = [
@@ -294,12 +284,26 @@ def mostrar_estadisticas_formateadas(estadisticas):
 
 
 # Funcion - genera excel - reporte diario
-def generar_excel_reporte_diario(reporte_final):
+def generar_excel_reporte_diario(reporte_final, estadisticas_final):
     with pd.ExcelWriter(archivo_reporte_diario, engine="openpyxl") as writer:
+        # Crear DataFrame de las estadísticas
+        columnas = [
+            "Trabajador",
+            "Inasistencias",
+            "Tardanzas",
+            "Horas Extra",
+            "Horas Perdidas",
+            "Diferencia",
+        ]
+        df_estadisticas = pd.DataFrame(estadisticas_final, columns=columnas)
+        df_estadisticas.to_excel(writer, sheet_name="Resumen", index=False)
+
+        # Escribir los registros de cada trabajador
         for trabajador, registros in reporte_final.items():
             df = pd.DataFrame(registros).fillna("-")
             df.to_excel(writer, sheet_name=trabajador[:31], index=False)
 
+        # Ajustar el ancho de columnas de todas las hojas
         for sheet_name in writer.book.sheetnames:
             worksheet = writer.book[sheet_name]
             for col_idx, col in enumerate(
@@ -309,18 +313,16 @@ def generar_excel_reporte_diario(reporte_final):
                     (len(str(cell.value)) for cell in col if cell.value is not None),
                     default=0,
                 )
-                adjusted_width = max_length + 2  # ancho con padding
+                adjusted_width = max_length + 2
                 column_letter = get_column_letter(col_idx)
                 worksheet.column_dimensions[column_letter].width = adjusted_width
 
 
-# Funcion - genera excel - reporte estadístico
-
 # Main
 trabajadores = obtener_trabajadores_con_exclusion()
+dias_laborables = dias_trabajables_desde_intervalo_csv()
 obj_trabajadores = crear_obj_trabajadores(trabajadores)
 objt_trabajadores_asistencia = agregar_registros_a_obj(obj_trabajadores)
-dias_laborables = dias_trabajables_desde_intervalo_csv()
 reporte_final = generar_reporte_asistencia(
     objt_trabajadores_asistencia, dias_laborables
 )
@@ -329,7 +331,9 @@ estadisticas_final = generar_reporte_estadisticas(reporte_final)
 
 # print(reporte_final)
 # print(mostrar_asistencia_formateado(reporte_final))
+# print(estadisticas_final)
 mostrar_estadisticas_formateadas(estadisticas_final)
 
 # print("\nGenerando reporte diario...")
-# generar_excel_reporte_diario(reporte_final)
+# generar_excel_reporte_diario(reporte_final, estadisticas_final)
+# print(f"Reporte diario generado: {archivo_reporte_diario}")
