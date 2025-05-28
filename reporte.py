@@ -248,7 +248,7 @@ def mostrar_registros_por_trabajador(obj):
 
 
 # Funcion - imprime - el reporte de generar_reporte_asistencia()
-def mostrar_reporte_formateado(reporte):
+def mostrar_asistencia_formateado(reporte):
     for trabajador, dias in reporte.items():
         print(f"\n🧑 {trabajador}")
         for dia in dias:
@@ -261,6 +261,36 @@ def mostrar_reporte_formateado(reporte):
                 f"Extras: {dia['Horas Extras']} - "
                 f"Obs.: {dia['Obs.']}"
             )
+
+
+# Funcion - imprime - el reporte de generar_reporte_estadisticas()
+def mostrar_estadisticas_formateadas(estadisticas):
+    headers = [
+        "👤 Trabajador",
+        "❌ Inasistencias",
+        "⏰ Tardanzas",
+        "🕒 Horas Extra",
+        "⌛ Horas Perdidas",
+        "📊 Diferencia",
+        "💰 Acción",
+    ]
+
+    col_widths = [
+        max(len(str(row[i])) for row in estadisticas + [headers]) + 2
+        for i in range(len(headers))
+    ]
+
+    header_row = "".join(
+        header.ljust(col_widths[i]) for i, header in enumerate(headers)
+    )
+    print("\n" + header_row)
+    print("-" * sum(col_widths))
+
+    for fila in estadisticas:
+        row_str = "".join(str(fila[i]).ljust(col_widths[i]) for i in range(len(fila)))
+        print(row_str)
+
+    print()
 
 
 # Funcion - genera excel - reporte diario
@@ -298,10 +328,8 @@ estadisticas_final = generar_reporte_estadisticas(reporte_final)
 
 
 # print(reporte_final)
-print(mostrar_reporte_formateado(reporte_final))
+# print(mostrar_asistencia_formateado(reporte_final))
+mostrar_estadisticas_formateadas(estadisticas_final)
 
 # print("\nGenerando reporte diario...")
 # generar_excel_reporte_diario(reporte_final)
-
-for fila in estadisticas_final:
-    print(fila)
