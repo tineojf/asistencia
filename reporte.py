@@ -198,20 +198,36 @@ def generar_reporte_estadisticas(reporte):
                 h, m = map(int, hora_extra.replace("h", "").replace("m", "").split())
                 total_horas_extra += datetime.timedelta(hours=h, minutes=m)
 
+        # Calcular diferencia con signo
         diferencia = total_horas_extra - total_horas_perdidas
+        segundos = int(diferencia.total_seconds())
+        signo = "+" if segundos > 0 else "-" if segundos < 0 else ""
+        segundos_abs = abs(segundos)
+        horas, minutos = divmod(segundos_abs // 60, 60)
+        diferencia_formateada = f"{signo}{horas}h {minutos}m"
+
+        # Determinar acción
+        if segundos > 0:
+            accion = "Pago"
+        elif segundos < 0:
+            accion = "Descuento"
+        else:
+            accion = "Sin acción"
+
+        def formatear(td):
+            total_seg = int(td.total_seconds())
+            h, m = divmod(total_seg // 60, 60)
+            return f"{h}h {m}m"
 
         estadisticas.append(
             [
                 trabajador,
                 inasistencias,
                 tardanzas,
-                f"{total_horas_extra.seconds // 3600}h {((total_horas_extra.seconds % 3600) // 60)}m",
-                f"{total_horas_perdidas.seconds // 3600}h {((total_horas_perdidas.seconds % 3600) // 60)}m",
-                (
-                    f"{abs(diferencia.seconds // 3600)}h {abs((diferencia.seconds % 3600) // 60)}m"
-                    if diferencia != datetime.timedelta()
-                    else "0h 0m"
-                ),
+                formatear(total_horas_extra),
+                formatear(total_horas_perdidas),
+                diferencia_formateada,
+                accion,
             ]
         )
 
