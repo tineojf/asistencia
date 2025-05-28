@@ -177,6 +177,7 @@ def generar_reporte_estadisticas(reporte):
     for trabajador, dias in reporte.items():
         inasistencias = 0
         tardanzas = 0
+        dias_cumplidos = 0
         total_horas_extra = datetime.timedelta()
         total_horas_perdidas = datetime.timedelta()
 
@@ -191,6 +192,11 @@ def generar_reporte_estadisticas(reporte):
 
             if hora_perdida and hora_perdida != "0h 0m":
                 tardanzas += 1
+            else:
+                # Si no hay horas perdidas y hay registro, se cuenta como día cumplido
+                dias_cumplidos += 1
+
+            if hora_perdida and hora_perdida != "0h 0m":
                 h, m = map(int, hora_perdida.replace("h", "").replace("m", "").split())
                 total_horas_perdidas += datetime.timedelta(hours=h, minutes=m)
 
@@ -216,6 +222,7 @@ def generar_reporte_estadisticas(reporte):
                 trabajador,
                 inasistencias,
                 tardanzas,
+                dias_cumplidos,
                 formatear(total_horas_extra),
                 formatear(total_horas_perdidas),
                 diferencia_formateada,
@@ -291,6 +298,7 @@ def generar_excel_reporte_diario(reporte_final, estadisticas_final):
             "Trabajador",
             "Inasistencias",
             "Tardanzas",
+            "Días Cumplidos",
             "Horas Extra",
             "Horas Perdidas",
             "Diferencia",
