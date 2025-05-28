@@ -9,14 +9,14 @@ archivo_reporte_diario = "reporte_diario.xlsx"
 archivo_reporte_estadistico = "reporte_estadistico.csv"
 archivo_intervalo = "intervalo.csv"
 horarios = {
-    "Elizabeth 1": ("08:00", "17:00"),
-    "Orlando 3": ("08:00", "17:00"),
-    "Principe 2": ("07:00", "19:00"),  # No confirmado
-    "Juan 10": ("07:00", "19:00"),  # No confirmado
-    "Chino 4": ("07:00", "19:00"),  # No confirmado
-    "Vallejo 7": ("07:00", "19:00"),  # No confirmado
-    "Mendez 6": ("07:00", "19:00"),  # No confirmado
-    "Teofilo 11": ("07:00", "19:00"),  # No confirmado
+    "Elizabeth 1": ("08:15", "17:00"),
+    "Orlando 3": ("08:15", "17:00"),
+    "Principe 2": ("07:15", "19:00"),  # No confirmado
+    "Juan 10": ("07:15", "19:00"),  # No confirmado
+    "Chino 4": ("07:15", "19:00"),  # No confirmado
+    "Vallejo 7": ("07:15", "19:00"),  # No confirmado
+    "Mendez 6": ("07:15", "19:00"),  # No confirmado
+    "Teofilo 11": ("07:15", "19:00"),  # No confirmado
 }
 
 
@@ -128,12 +128,39 @@ def generar_reporte_asistencia(obj_asistencia, dias_trabajables):
 
             observaciones = ""
             tiempo_total = ""
+            horas_perdidas = ""
+            horas_extras = ""
 
             if entrada and salida:
                 diff = salida - entrada
                 horas, rem = divmod(diff.seconds, 3600)
                 minutos = rem // 60
                 tiempo_total = f"{horas}h {minutos}m"
+
+                # Calcular horas perdidas y extras
+                if trabajador in horarios:
+                    h_entrada, h_salida = horarios[trabajador]
+                    hora_entrada_teorica = datetime.datetime.strptime(
+                        f"{dia} {h_entrada}", "%d/%m/%Y %H:%M"
+                    )
+                    hora_salida_teorica = datetime.datetime.strptime(
+                        f"{dia} {h_salida}", "%d/%m/%Y %H:%M"
+                    )
+
+                    # Horas perdidas (por tardanza)
+                    if entrada > hora_entrada_teorica:
+                        retraso = entrada - hora_entrada_teorica
+                        rh, rm = divmod(retraso.seconds, 3600)
+                        minutos = rm // 60
+                        horas_perdidas = f"{rh}h {minutos}m"
+
+                    # Horas extras (por salir más tarde)
+                    if salida > hora_salida_teorica:
+                        extra = salida - hora_salida_teorica
+                        eh, em = divmod(extra.seconds, 3600)
+                        minutos = em // 60
+                        horas_extras = f"{eh}h {minutos}m"
+
             elif not entrada and not salida:
                 observaciones = "Sin marcas"
             elif not entrada:
@@ -147,7 +174,9 @@ def generar_reporte_asistencia(obj_asistencia, dias_trabajables):
                     "Hora Entrada": entrada.strftime("%H:%M") if entrada else "",
                     "Hora Salida": salida.strftime("%H:%M") if salida else "",
                     "Tiempo Total": tiempo_total,
-                    "Observaciones": observaciones,
+                    "Horas Perdidas": horas_perdidas,
+                    "Horas Extras": horas_extras,
+                    "Obs.": observaciones,
                 }
             )
 
@@ -229,8 +258,13 @@ def mostrar_reporte_formateado(reporte):
         print(f"\n🧑 {trabajador}")
         for dia in dias:
             print(
-                f"📅 {dia['Fecha']}: Entrada: {dia['Hora Entrada']} - Salida: {dia['Hora Salida']} - "
-                f"Total: {dia['Tiempo Total']} - Obs: {dia['Observaciones']}"
+                f"📅 {dia['Fecha']}: "
+                f"Entrada: {dia['Hora Entrada']} - "
+                f"Salida: {dia['Hora Salida']} - "
+                f"Total: {dia['Tiempo Total']} - "
+                f"Perdidas: {dia['Horas Perdidas']} - "
+                f"Extras: {dia['Horas Extras']} - "
+                f"Obs.: {dia['Obs.']}"
             )
 
 
@@ -264,7 +298,7 @@ reporte_final = generar_reporte_asistencia(
     objt_trabajadores_asistencia, dias_laborables
 )
 # print(reporte_final)
-print(mostrar_reporte_formateado(reporte_final))
+# print(mostrar_reporte_formateado(reporte_final))
 
 print("\nGenerando reporte diario...")
 generar_excel_reporte_diario(reporte_final)
