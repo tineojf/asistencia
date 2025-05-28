@@ -171,72 +171,51 @@ def generar_reporte_asistencia(obj_asistencia, dias_trabajables):
 
 
 # Función - retorna objeto - con resumen estadístico
-def generar_estadistico_asistencia(reporte_final, horarios):
-    resumen = {}
+def generar_reporte_estadisticas(reporte):
+    estadisticas = []
 
-    for nombre, dias in reporte_final.items():
-        asistencias = 0
+    for trabajador, dias in reporte.items():
+        inasistencias = 0
         tardanzas = 0
-        horas_extra = 0
-        horas_perdidas = 0
-
-        # Horario de referencia (por defecto 08:00 - 17:00 si no se encuentra)
-        hora_entrada_ref_str, hora_salida_ref_str = horarios.get(
-            nombre, ("08:00", "17:00")
-        )
-        hora_entrada_ref = datetime.datetime.strptime(
-            hora_entrada_ref_str, "%H:%M"
-        ).time()
-        hora_salida_ref = datetime.datetime.strptime(
-            hora_salida_ref_str, "%H:%M"
-        ).time()
-
-        # Duración de la jornada laboral en minutos
-        jornada_estimada = (
-            datetime.datetime.combine(datetime.datetime.min, hora_salida_ref)
-            - datetime.datetime.combine(datetime.datetime.min, hora_entrada_ref)
-        ).seconds // 60
+        total_horas_extra = datetime.timedelta()
+        total_horas_perdidas = datetime.timedelta()
 
         for dia in dias:
-            hora_entrada = dia["Hora Entrada"]
-            hora_salida = dia["Hora Salida"]
             tiempo_total = dia["Tiempo Total"]
+            hora_perdida = dia["Horas Perdidas"]
+            hora_extra = dia["Horas Extras"]
 
-            if hora_entrada and hora_salida:
-                asistencias += 1
+            if not tiempo_total:
+                inasistencias += 1
+                continue
 
-                entrada_dt = datetime.datetime.strptime(hora_entrada, "%H:%M").time()
-                salida_dt = datetime.datetime.strptime(hora_salida, "%H:%M").time()
+            if hora_perdida and hora_perdida != "0h 0m":
+                tardanzas += 1
+                h, m = map(int, hora_perdida.replace("h", "").replace("m", "").split())
+                total_horas_perdidas += datetime.timedelta(hours=h, minutes=m)
 
-                # Tardanza si llegó después de la hora de entrada
-                if entrada_dt > hora_entrada_ref:
-                    tardanzas += 1
+            if hora_extra and hora_extra != "0h 0m":
+                h, m = map(int, hora_extra.replace("h", "").replace("m", "").split())
+                total_horas_extra += datetime.timedelta(hours=h, minutes=m)
 
-                # Calcular duración trabajada en minutos
-                entrada_completa = datetime.datetime.combine(
-                    datetime.date.min, entrada_dt
-                )
-                salida_completa = datetime.datetime.combine(
-                    datetime.date.min, salida_dt
-                )
+        diferencia = total_horas_extra - total_horas_perdidas
 
-                minutos_trabajados = (salida_completa - entrada_completa).seconds // 60
+        estadisticas.append(
+            [
+                trabajador,
+                inasistencias,
+                tardanzas,
+                f"{total_horas_extra.seconds // 3600}h {((total_horas_extra.seconds % 3600) // 60)}m",
+                f"{total_horas_perdidas.seconds // 3600}h {((total_horas_perdidas.seconds % 3600) // 60)}m",
+                (
+                    f"{abs(diferencia.seconds // 3600)}h {abs((diferencia.seconds % 3600) // 60)}m"
+                    if diferencia != datetime.timedelta()
+                    else "0h 0m"
+                ),
+            ]
+        )
 
-                diferencia = minutos_trabajados - jornada_estimada
-                if diferencia > 0:
-                    horas_extra += diferencia
-                elif diferencia < 0:
-                    horas_perdidas += abs(diferencia)
-
-        resumen[nombre] = [
-            nombre,
-            asistencias,
-            tardanzas,
-            f"{horas_extra // 60}h {horas_extra % 60}m",
-            f"{horas_perdidas // 60}h {horas_perdidas % 60}m",
-        ]
-
-    return resumen
+    return estadisticas
 
 
 # Funcion - imprime - los registros de agregar_registros_a_obj()
@@ -288,19 +267,25 @@ def generar_excel_reporte_diario(reporte_final):
                 column_letter = get_column_letter(col_idx)
                 worksheet.column_dimensions[column_letter].width = adjusted_width
 
+
 # Funcion - genera excel - reporte estadístico
 
 # Main
 trabajadores = obtener_trabajadores_con_exclusion()
 obj_trabajadores = crear_obj_trabajadores(trabajadores)
 objt_trabajadores_asistencia = agregar_registros_a_obj(obj_trabajadores)
-mostrar_registros_por_trabajador(objt_trabajadores_asistencia)
 dias_laborables = dias_trabajables_desde_intervalo_csv()
 reporte_final = generar_reporte_asistencia(
     objt_trabajadores_asistencia, dias_laborables
 )
+estadisticas_final = generar_reporte_estadisticas(reporte_final)
+
+
 # print(reporte_final)
-# print(mostrar_reporte_formateado(reporte_final))
+print(mostrar_reporte_formateado(reporte_final))
 
 # print("\nGenerando reporte diario...")
 # generar_excel_reporte_diario(reporte_final)
+
+for fila in estadisticas_final:
+    print(fila)
