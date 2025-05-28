@@ -6,7 +6,7 @@ archivo_salida = "reporte_diario.csv"
 archivo_intervalo = "intervalo.csv"
 horarios = {
     "Elizabeth 1": ("08:00", "17:00"),
-    "Orlando 3": ("08:00", "1:00"),
+    "Orlando 3": ("08:00", "17:00"),
     "Principe 2": ("07:00", "19:00"),  # No confirmado
     "Juan 10": ("07:00", "19:00"),  # No confirmado
     "Chino 4": ("07:00", "19:00"),  # No confirmado
