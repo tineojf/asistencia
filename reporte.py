@@ -161,8 +161,8 @@ def generar_reporte_asistencia(obj_asistencia, dias_trabajables):
                     "Hora Entrada": entrada.strftime("%H:%M") if entrada else "",
                     "Hora Salida": salida.strftime("%H:%M") if salida else "",
                     "Tiempo Total": tiempo_total,
-                    "Horas Perdidas": horas_perdidas,
                     "Horas Extras": horas_extras,
+                    "Horas Perdidas": horas_perdidas,
                     "Obs.": observaciones,
                 }
             )
@@ -332,8 +332,8 @@ estadisticas_final = generar_reporte_estadisticas(reporte_final)
 # print(reporte_final)
 # print(mostrar_asistencia_formateado(reporte_final))
 # print(estadisticas_final)
-mostrar_estadisticas_formateadas(estadisticas_final)
+# mostrar_estadisticas_formateadas(estadisticas_final)
 
-# print("\nGenerando reporte diario...")
-# generar_excel_reporte_diario(reporte_final, estadisticas_final)
-# print(f"Reporte diario generado: {archivo_reporte_diario}")
+print("\nGenerando reporte diario...")
+generar_excel_reporte_diario(reporte_final, estadisticas_final)
+print(f"Reporte diario generado: {archivo_reporte_diario}")
