@@ -78,7 +78,7 @@ def dias_trabajables_desde_intervalo_csv():
     fecha_actual = fecha_inicio
 
     while fecha_actual <= fecha_fin:
-        if fecha_actual.weekday() <= 5:  # lunes a sábado
+        if fecha_actual.weekday() <= 4:  # lunes a sábado
             dias_laborables.append(fecha_actual.strftime("%d/%m/%Y"))
         fecha_actual += datetime.timedelta(days=1)
 
