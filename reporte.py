@@ -7,17 +7,24 @@ import sys
 
 
 def ruta_absoluta_archivo(nombre_archivo):
+    # Si está compilado con PyInstaller
     if getattr(sys, "frozen", False):
-        # Si está compilado con PyInstaller
-        ruta_base = (
-            sys._MEIPASS
-            if hasattr(sys, "_MEIPASS")
-            else os.path.dirname(sys.executable)
-        )
+        # Primero intenta en la carpeta del ejecutable
+        ruta_base = os.path.dirname(sys.executable)
+        ruta_archivo = os.path.join(ruta_base, nombre_archivo)
+        if os.path.exists(ruta_archivo):
+            return ruta_archivo
+        # Si no existe, intenta en _MEIPASS (por si acaso)
+        if hasattr(sys, "_MEIPASS"):
+            ruta_archivo = os.path.join(sys._MEIPASS, nombre_archivo)
+            if os.path.exists(ruta_archivo):
+                return ruta_archivo
+        # Si no existe en ninguna, retorna la ruta en la carpeta del ejecutable
+        return os.path.join(ruta_base, nombre_archivo)
     else:
         # Ejecutando como script Python
         ruta_base = os.path.dirname(__file__)
-    return os.path.join(ruta_base, nombre_archivo)
+        return os.path.join(ruta_base, nombre_archivo)
 
 
 archivo_entrada = ruta_absoluta_archivo("asistencia.csv")
@@ -78,7 +85,7 @@ def dias_trabajables_desde_intervalo_csv():
     fecha_actual = fecha_inicio
 
     while fecha_actual <= fecha_fin:
-        if fecha_actual.weekday() <= 4:  # lunes a sábado
+        if fecha_actual.weekday() <= 5:  # lunes a sábado
             dias_laborables.append(fecha_actual.strftime("%d/%m/%Y"))
         fecha_actual += datetime.timedelta(days=1)
 
