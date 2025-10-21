@@ -32,8 +32,8 @@ archivo_reporte_diario = ruta_absoluta_archivo("reporte_diario.xlsx")
 archivo_reporte_estadistico = ruta_absoluta_archivo("reporte_estadistico.csv")
 archivo_intervalo = ruta_absoluta_archivo("intervalo.csv")
 horarios = {
-    "Elizabeth 1": ("08:15", "17:00"),
-    "Orlando 3": ("08:15", "17:00"),
+    "Elizabeth 1": ("08:15", "18:00"),
+    "Orlando 3": ("08:15", "18:00"),
     "Principe 2": ("07:15", "19:00"),  # No confirmado
     "Juan 10": ("07:15", "19:00"),  # No confirmado
     "Chino 4": ("07:15", "19:00"),  # No confirmado
@@ -85,7 +85,7 @@ def dias_trabajables_desde_intervalo_csv():
     fecha_actual = fecha_inicio
 
     while fecha_actual <= fecha_fin:
-        if fecha_actual.weekday() <= 5:  # lunes a sábado
+        if fecha_actual.weekday() < 5:  # lunes a sábado
             dias_laborables.append(fecha_actual.strftime("%d/%m/%Y"))
         fecha_actual += datetime.timedelta(days=1)
 
