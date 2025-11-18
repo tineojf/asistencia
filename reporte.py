@@ -32,14 +32,15 @@ archivo_reporte_diario = ruta_absoluta_archivo("reporte_diario.xlsx")
 archivo_reporte_estadistico = ruta_absoluta_archivo("reporte_estadistico.csv")
 archivo_intervalo = ruta_absoluta_archivo("intervalo.csv")
 horarios = {
-    "Elizabeth 1": ("08:15", "18:00"),
-    "Orlando 3": ("08:15", "18:00"),
-    "Principe 2": ("07:15", "19:00"),  # No confirmado
-    "Juan 10": ("07:15", "19:00"),  # No confirmado
-    "Chino 4": ("07:15", "19:00"),  # No confirmado
-    "Vallejo 7": ("07:15", "19:00"),  # No confirmado
-    "Mendez 6": ("07:15", "19:00"),  # No confirmado
-    "Teofilo 11": ("07:15", "19:00"),  # No confirmado
+    "Elizabeth 1": ("08:00", "18:00"),
+    "Orlando 3": ("08:00", "18:00"),
+    "Principe 2": ("07:00", "19:00"),  # No confirmado
+    "Juan 10": ("07:00", "19:00"),  # No confirmado
+    "Chino 4": ("07:00", "19:00"),  # No confirmado
+    "Vallejo 7": ("07:00", "19:00"),  # No confirmado
+    "Mendez 6": ("07:00", "19:00"),  # No confirmado
+    "Teofilo 11": ("07:00", "19:00"),  # No confirmado
+    "Nicole 13": ("08:00", "18:00"),  # No confirmado
 }
 
 
