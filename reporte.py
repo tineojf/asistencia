@@ -40,7 +40,7 @@ horarios = {
     "Vallejo 7": ("07:00", "19:00"),  # No confirmado
     "Mendez 6": ("07:00", "19:00"),  # No confirmado
     "Teofilo 11": ("07:00", "19:00"),  # No confirmado
-    "Nicole 13": ("08:00", "18:00"),  # No confirmado
+    "Nicole 13": ("08:00", "18:00"),
 }
 
 
